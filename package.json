@@ -5,12 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-   "dev": "tsx watch src/index.ts",
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "lint": "eslint src",
-  "format": "prettier --write src",
-  "test": "vitest"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
@@ -25,5 +25,8 @@
   "homepage": "https://github.com/matheus-vmattos/calcula-di-api#readme",
   "devDependencies": {
     "vitest": "^4.1.6"
+  },
+  "dependencies": {
+    "undici": "^8.2.0"
   }
 }

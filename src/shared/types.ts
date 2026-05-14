@@ -53,3 +53,27 @@ export interface CdbResult {
   /** Rentabilidade líquida sobre o valor investido (em %). */
   rentabilidadeLiquidaPercentual: number;
 }
+// ============================================================================
+// Adapter BCB — tipos
+// ============================================================================
+
+/**
+ * Representa uma observação bruta retornada pela API SGS do Banco Central.
+ * Formato original: { data: "DD/MM/YYYY", valor: "string numérica" }
+ */
+export interface SgsObservation {
+  data: string;   // "DD/MM/YYYY"
+  valor: string;  // ex: "0.67" ou "14.50"
+}
+
+/**
+ * Identificadores das séries SGS do BCB que usamos no projeto.
+ */
+export const SGS_SERIES = {
+  IPCA: 433,
+  IGPM: 189,
+  SELIC_META: 432,
+  CDI: 12,
+} as const;
+
+export type SgsSerieCode = (typeof SGS_SERIES)[keyof typeof SGS_SERIES];
