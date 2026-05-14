@@ -3,33 +3,53 @@
  */
 
 /**
- * Resultado do cálculo de um investimento em CDB pós-fixado.
- * Todos os valores monetários estão em reais (R$).
+ * Parâmetros para calcular o rendimento de um CDB pós-fixado em % do CDI.
+ * Todos os valores monetários em reais (R$).
  */
-export interface CdbResult {
+export interface CdbInput {
+  /** Valor aplicado, em R$. Deve ser > 0. */
   valorInvestido: number;
+  /** Percentual do CDI contratado. Ex: 120 para "120% do CDI". Deve ser > 0. */
+  percentualCdi: number;
+  /** Taxa CDI anual atual, em %. Ex: 14.9 para 14,9% a.a. Deve ser >= 0. */
+  taxaCdiAnual: number;
+  /** Prazo em dias corridos. Usado para IR e IOF. Deve ser >= 1. */
   diasCorridos: number;
+  /** Prazo em dias úteis (base 252). Usado para capitalização. Deve ser >= 1. */
   diasUteis: number;
-  taxaCdiAnual: number;        // ex: 14.9 (em %)
-  percentualCdi: number;        // ex: 120 (em %)
-  taxaContratada: number;       // taxa efetiva anual contratada (em %)
-  rendimentoBruto: number;
-  iof: number;
-  baseIr: number;               // rendimento após IOF, base de cálculo do IR
-  aliquotaIr: number;           // ex: 0.225 (decimal)
-  ir: number;
-  rendimentoLiquido: number;
-  valorFinal: number;
-  rentabilidadeLiquidaPercentual: number; // % sobre o valor investido
 }
 
 /**
- * Parâmetros para calcular o rendimento de um CDB pós-fixado.
+ * Resultado detalhado do cálculo de um CDB pós-fixado.
+ * Todos os valores monetários em reais (R$).
  */
-export interface CdbInput {
-  valorInvestido: number;       // R$
-  percentualCdi: number;        // % do CDI (ex: 120 para "120% do CDI")
-  taxaCdiAnual: number;         // taxa CDI anual em % (ex: 14.9)
-  diasCorridos: number;         // prazo da aplicação em dias corridos
-  diasUteis: number;            // prazo da aplicação em dias úteis
+export interface CdbResult {
+  /** Valor aplicado (espelho do input, para conveniência do consumidor). */
+  valorInvestido: number;
+  /** Prazo em dias corridos. */
+  diasCorridos: number;
+  /** Prazo em dias úteis. */
+  diasUteis: number;
+  /** Taxa CDI anual usada (em %). */
+  taxaCdiAnual: number;
+  /** Percentual do CDI contratado (em %). */
+  percentualCdi: number;
+  /** Taxa efetiva anual contratada (em %). Ex: 120% de 10% a.a. → 12% a.a. */
+  taxaContratadaAnual: number;
+  /** Rendimento antes de impostos (R$). */
+  rendimentoBruto: number;
+  /** IOF retido (R$). Zero para resgates após 30 dias corridos. */
+  iof: number;
+  /** Base de cálculo do IR: rendimento bruto menos IOF (R$). */
+  baseIr: number;
+  /** Alíquota de IR aplicada (decimal). Ex: 0.225 = 22,5%. */
+  aliquotaIr: number;
+  /** IR retido (R$). */
+  ir: number;
+  /** Rendimento líquido após IOF e IR (R$). */
+  rendimentoLiquido: number;
+  /** Valor final a ser resgatado (R$). */
+  valorFinal: number;
+  /** Rentabilidade líquida sobre o valor investido (em %). */
+  rentabilidadeLiquidaPercentual: number;
 }
