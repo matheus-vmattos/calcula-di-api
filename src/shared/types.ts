@@ -112,3 +112,35 @@ export interface IndiceAnual {
   valorDiarioEquivalente: number;
   dataAtualizacao: string;
 }
+// ============================================================================
+// Saída do IndicesService (consumida pelo endpoint HTTP)
+// ============================================================================
+
+/**
+ * Snapshot completo dos 4 índices monitorados.
+ *
+ * - geradoEm: timestamp ISO de quando o snapshot foi montado (UTC).
+ * - origem: indica se os dados vieram do cache ou foram buscados agora.
+ */
+export interface IndicesSnapshot {
+  ipca: IndiceMensal | null;
+  igpm: IndiceMensal | null;
+  selic: IndiceAnual | null;
+  cdi: IndiceAnual | null;
+  geradoEm: string;
+  origem: 'cache' | 'live' | 'parcial';
+}
+// ============================================================================
+// Ambiente do Cloudflare Worker (bindings configurados via wrangler.toml)
+// ============================================================================
+
+/**
+ * Bindings disponíveis em runtime no Cloudflare Worker.
+ * Refletem o que está definido em wrangler.toml.
+ */
+export interface WorkerEnv {
+  /** Namespace KV para cache. Vem do binding [[kv_namespaces]]. */
+  CACHE_KV: KVNamespace;
+  /** TTL do cache em segundos. Vem de [vars]. */
+  CACHE_TTL_SECONDS: string;
+}

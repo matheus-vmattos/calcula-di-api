@@ -1,0 +1,18 @@
+name = "calcula-di-api"
+main = "src/http/worker.ts"
+compatibility_date = "2026-05-14"
+compatibility_flags = ["nodejs_compat"]
+
+# Account ID da conta Cloudflare
+account_id = "d737593dc0535172105179de560de693"
+
+# Configuração do KV namespace (binding "CACHE_KV")
+# O ID será preenchido depois que criarmos o namespace
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "4b4baf8874ee405583378eb73d81d1ef"
+preview_id = "c130cff8b9104a479a3675e22c295779"           # id de preview/dev
+
+# Variáveis de ambiente (não-secretas)
+[vars]
+CACHE_TTL_SECONDS = "43200"  # 12 horas
