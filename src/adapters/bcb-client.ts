@@ -1,4 +1,3 @@
-import { request, getGlobalDispatcher } from 'undici';
 import { BCB_CONFIG } from '../config/bcb.js';
 import type { SgsObservation, SgsSerieCode } from '../shared/types.js';
 
@@ -26,8 +25,8 @@ export class BcbApiError extends Error {
 /**
  * Busca as últimas N observações de uma série do SGS (Banco Central do Brasil).
  *
- * Implementa retry com backoff linear para tolerar falhas transitórias
- * (timeouts intermitentes do BCB, especialmente da série IGP-M).
+ * Usa `fetch` nativo (compatível com Cloudflare Workers, Node 18+ e browsers).
+ * Implementa retry com backoff linear para tolerar falhas transitórias.
  *
  * @param serie - código numérico da série SGS (ex: 433 para IPCA)
  * @param quantidade - número de observações a buscar (default: 12)
@@ -51,8 +50,7 @@ export async function fetchSgsSerie(
     } catch (err) {
       ultimoErro = err instanceof BcbApiError ? err : new BcbApiError(String(err));
 
-      // Só faz retry em erros marcados como retryable (5xx, timeouts, falhas de rede).
-      // Erros definitivos (4xx, payload inválido, validação) param na hora.
+      // Erros definitivos (não-retryable) param na hora.
       if (!ultimoErro.retryable) {
         throw ultimoErro;
       }
@@ -77,29 +75,35 @@ async function executarRequisicao(
 ): Promise<SgsObservation[]> {
   const url = `${BCB_CONFIG.baseUrl}/bcdata.sgs.${serie}/dados/ultimos/${quantidade}?formato=json`;
 
-  let response;
+  // AbortController para implementar timeout no fetch nativo
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BCB_CONFIG.timeoutMs);
+
+  let response: Response;
   try {
-    response = await request(url, {
+    response = await fetch(url, {
       method: 'GET',
-      headersTimeout: BCB_CONFIG.timeoutMs,
-      bodyTimeout: BCB_CONFIG.timeoutMs,
-      dispatcher: getGlobalDispatcher(),
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
     });
   } catch (err) {
+    // Erros de rede e timeouts SÃO retryable (podem ser transitórios)
     const detail = err instanceof Error ? err.message : String(err);
-    // Erros de rede SÃO retryable (timeout pode ser transitório)
-    throw new BcbApiError(`falha de rede ao consultar BCB: ${detail}`, undefined, serie, true);
+    const isTimeout = err instanceof Error && err.name === 'AbortError';
+    const msg = isTimeout
+      ? `timeout (${BCB_CONFIG.timeoutMs}ms) ao consultar BCB`
+      : `falha de rede ao consultar BCB: ${detail}`;
+    throw new BcbApiError(msg, undefined, serie, true);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
-  const { statusCode, body } = response;
-
-  if (statusCode < 200 || statusCode >= 300) {
-    await body.dump();
-    // 5xx é retryable (servidor pode se recuperar); 4xx não (erro do cliente)
-    const retryable = statusCode >= 500;
+  if (!response.ok) {
+    // 5xx é retryable; 4xx não.
+    const retryable = response.status >= 500;
     throw new BcbApiError(
-      `BCB retornou status ${statusCode} para série ${serie}`,
-      statusCode,
+      `BCB retornou status ${response.status} para série ${serie}`,
+      response.status,
       serie,
       retryable,
     );
@@ -107,18 +111,16 @@ async function executarRequisicao(
 
   let payload: unknown;
   try {
-    payload = await body.json();
+    payload = await response.json();
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    // JSON inválido NÃO é retryable — é determinístico
-    throw new BcbApiError(`payload JSON inválido do BCB: ${detail}`, statusCode, serie, false);
+    throw new BcbApiError(`payload JSON inválido do BCB: ${detail}`, response.status, serie, false);
   }
 
   if (!Array.isArray(payload)) {
-    // Estrutura errada NÃO é retryable
     throw new BcbApiError(
       `formato inesperado: esperado array, recebido ${typeof payload}`,
-      statusCode,
+      response.status,
       serie,
       false,
     );
@@ -133,7 +135,7 @@ async function executarRequisicao(
     ) {
       throw new BcbApiError(
         `observação malformada: ${JSON.stringify(item)}`,
-        statusCode,
+        response.status,
         serie,
         false,
       );

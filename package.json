@@ -24,9 +24,9 @@
   },
   "homepage": "https://github.com/matheus-vmattos/calcula-di-api#readme",
   "devDependencies": {
-    "vitest": "^4.1.6"
-  },
-  "dependencies": {
-    "undici": "^8.2.0"
+    "@cloudflare/workers-types": "^4.20260511.1",
+    "@types/node": "^25.8.0",
+    "vitest": "^4.1.6",
+    "wrangler": "^4.91.0"
   }
 }
