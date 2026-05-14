@@ -77,3 +77,38 @@ export const SGS_SERIES = {
 } as const;
 
 export type SgsSerieCode = (typeof SGS_SERIES)[keyof typeof SGS_SERIES];
+// ============================================================================
+// Tipos de saída do normalizador (consumidos pelo frontend)
+// ============================================================================
+
+/**
+ * Índice publicado em base mensal (IPCA, IGP-M).
+ *
+ * - valorMes: variação do último mês disponível (%).
+ * - acumulado12m: acumulado dos últimos 12 meses por capitalização composta (%).
+ * - mesReferencia: formato técnico "MM/YYYY" (ordenação e lógica).
+ * - mesReferenciaDisplay: formato amigável "Abril/2026" (UI).
+ * - dataAtualizacao: data completa de publicação no BCB (ISO).
+ */
+export interface IndiceMensal {
+  nome: 'IPCA' | 'IGP-M';
+  valorMes: number;
+  acumulado12m: number;
+  mesReferencia: string;
+  mesReferenciaDisplay: string;
+  dataAtualizacao: string;
+}
+
+/**
+ * Índice publicado em base anual ou diária (Selic, CDI).
+ *
+ * - valorAnual: taxa em % ao ano.
+ * - valorDiarioEquivalente: taxa em % ao dia útil (referencial).
+ * - dataAtualizacao: última data de publicação no BCB (ISO).
+ */
+export interface IndiceAnual {
+  nome: 'SELIC' | 'CDI';
+  valorAnual: number;
+  valorDiarioEquivalente: number;
+  dataAtualizacao: string;
+}
